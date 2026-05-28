@@ -1,9 +1,23 @@
-# Self-hosted GitHub Actions runner on Kyma
+# gha-runner-kyma
 
-A static-IP-friendly GitHub Actions runner that lives inside the same
-Kyma cluster as `your-llm-gateway`. Workflows tagged `runs-on: [self-hosted, kyma]`
-execute on this runner, which can call the in-cluster Anthropic proxy
-without needing GitHub's egress IPs in the proxy's allowlist.
+[![secrets-scan](https://github.com/st-gr/gha-runner-kyma/actions/workflows/secrets-scan.yml/badge.svg)](https://github.com/st-gr/gha-runner-kyma/actions/workflows/secrets-scan.yml)
+
+A self-hosted GitHub Actions runner that lives inside an SAP BTP Kyma
+cluster. Workflows tagged `runs-on: [self-hosted, kyma]` execute on
+this runner, which can call an **in-cluster** Anthropic-compatible LLM
+gateway without needing GitHub's egress IPs in the gateway's allowlist.
+
+This repo is a self-contained toolkit: a Kubernetes namespace, a few
+small manifests, a parameterized Deployment template, three Node.js
+helper scripts, and a Makefile. No Helm. No CRDs. The runner image is
+the official `ghcr.io/actions/actions-runner` plus a ~50-line bash
+entrypoint mounted via ConfigMap (auditable in
+`configmap-entrypoint.yaml`).
+
+> Originally lived inside `st-gr/openshell-driver-kyma` under
+> `deploy/runner/`; extracted into its own repo on 2026-05-28 because
+> it has no dependency on the OpenShell driver and is useful to anyone
+> running an in-cluster LLM proxy.
 
 ## What you get
 
@@ -74,10 +88,10 @@ make runner-add-repo OWNER=<owner> REPO=<repo>
 The Node.js script:
 
 1. Validates the repo exists via `gh api repos/<owner>/<repo>`.
-2. Renders `deploy/runner/deployment-template.yaml` by literal string
+2. Renders `deployment-template.yaml` by literal string
    substitution.
 3. Writes the rendered manifest to
-   `deploy/runner/deployments/<owner>-<repo>.yaml` (committed for
+   `deployments/<owner>-<repo>.yaml` (committed for
    reproducibility — contains no secrets, only `secretKeyRef` pointers).
 4. Pipes the manifest to `kubectl apply`.
 
@@ -95,7 +109,7 @@ make runner-remove-repo OWNER=<owner> REPO=<repo>
 
 The runner pod's SIGTERM trap deregisters itself from GitHub before the
 container exits, so the `Settings → Actions → Runners` UI cleans up
-automatically. The rendered manifest under `deploy/runner/deployments/`
+automatically. The rendered manifest under `deployments/`
 is also removed; pass `--keep-file` to the script if you want to keep
 the historical record.
 
@@ -112,7 +126,7 @@ each pod registers under a stable name (`runner-<owner>-<repo>`) with
 
 ## Image upgrade policy
 
-`deploy/runner/deployment-template.yaml` references
+`deployment-template.yaml` references
 `ghcr.io/actions/actions-runner:latest` for ease of initial setup.
 **Pin to a digest** before any production rollout.
 
@@ -197,7 +211,7 @@ the VirtualService is not matching — usually because the URL points at
 - **Tokens never on disk in the repo**: `Secret` is created via
   `kubectl create secret --from-literal` from values typed into
   `read -rs`. Manifests reference the Secret via `secretKeyRef`. The
-  rendered Deployments under `deploy/runner/deployments/` contain only
+  rendered Deployments under `deployments/` contain only
   pointers, not values.
 - **gitleaks gate**: `.github/workflows/secrets-scan.yml` runs gitleaks
   on every PR and push to main. Any high-confidence credential pattern
@@ -214,7 +228,7 @@ docker run --rm -v "$PWD:/r" zricethezav/gitleaks:latest \
   detect --source /r --redact -v
 
 # 2. Visual review.
-ls deploy/runner/deployments/
+ls deployments/
 # Open each rendered Deployment and confirm it contains no inline tokens.
 # (It shouldn't — secretKeyRef only — but verify before going public.)
 

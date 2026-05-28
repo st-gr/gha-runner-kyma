@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // add-runner-repo.js — register a self-hosted GitHub Actions runner for one
-// repository. Renders deploy/runner/deployment-template.yaml with the given
-// owner/repo, writes the result to deploy/runner/deployments/<owner>-<repo>.yaml,
+// repository. Renders deployment-template.yaml with the given
+// owner/repo, writes the result to deployments/<owner>-<repo>.yaml,
 // and (with --apply) pipes it to kubectl.
 //
 // SECRETS: this script NEVER accepts a token via argv or env. The PAT and
@@ -25,8 +25,8 @@ const path = require('path');
 const { execFileSync, spawnSync } = require('child_process');
 
 const REPO_ROOT = path.resolve(__dirname, '..');
-const TEMPLATE_PATH = path.join(REPO_ROOT, 'deploy/runner/deployment-template.yaml');
-const DEPLOYMENTS_DIR = path.join(REPO_ROOT, 'deploy/runner/deployments');
+const TEMPLATE_PATH = path.join(REPO_ROOT, 'deployment-template.yaml');
+const DEPLOYMENTS_DIR = path.join(REPO_ROOT, 'deployments');
 
 function die(msg, code = 2) {
   process.stderr.write(`add-runner-repo: ${msg}\n`);
@@ -55,7 +55,7 @@ function parseArgs(argv) {
           '  [--name <runner-name>] [--namespace <ns>] \\',
           '  (--apply | --dry-run)',
           '',
-          'Renders deploy/runner/deployment-template.yaml and either applies it',
+          'Renders deployment-template.yaml and either applies it',
           'to the cluster (--apply) or prints it to stdout (--dry-run).',
           '',
           'Tokens are NEVER passed as arguments. The runner pod reads the PAT',

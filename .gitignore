@@ -1,0 +1,37 @@
+# Editor / IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Local kubeconfig (NEVER commit cluster credentials)
+kubeconfig*
+*.kubeconfig
+.kube/
+.tmp/
+
+# Local environment files
+.env
+.env.*
+!.env.example
+
+# Self-hosted runner: secret hygiene safety net. The real Secret is
+# created via `kubectl create secret` from interactive input — never
+# via a YAML file. These patterns prevent accidental commits if anyone
+# ignores the README.
+secret.yaml
+secrets.yaml
+**/runner-token-*.txt
+**/registration-token-*.txt
+**/*.pat
+**/*-pat.txt
+**/anthropic-token-*.txt
+
+# Node module noise from scripts/ if anyone runs `npm install` ad-hoc
+scripts/node_modules/
+
+# Local agent state
+.claude/

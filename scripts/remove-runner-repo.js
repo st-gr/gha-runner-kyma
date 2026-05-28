@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // remove-runner-repo.js — un-register the self-hosted runner for one repo.
 // Deletes the cluster Deployment AND the committed manifest under
-// deploy/runner/deployments/. The runner pod's SIGTERM trap deregisters
+// deployments/. The runner pod's SIGTERM trap deregisters
 // it from GitHub before the container exits.
 //
 // Tokens are not handled here — same hygiene as add-runner-repo.js.
@@ -17,7 +17,7 @@ const path = require('path');
 const { spawnSync } = require('child_process');
 
 const REPO_ROOT = path.resolve(__dirname, '..');
-const DEPLOYMENTS_DIR = path.join(REPO_ROOT, 'deploy/runner/deployments');
+const DEPLOYMENTS_DIR = path.join(REPO_ROOT, 'deployments');
 
 function die(msg, code = 2) {
   process.stderr.write(`remove-runner-repo: ${msg}\n`);
@@ -43,7 +43,7 @@ function parseArgs(argv) {
           '  --owner <owner> --repo <repo> [--namespace <ns>] [--keep-file]',
           '',
           'Deletes the runner Deployment from the cluster and removes the',
-          'rendered manifest under deploy/runner/deployments/. With',
+          'rendered manifest under deployments/. With',
           '--keep-file the rendered manifest stays committed but the',
           'cluster object is still deleted.',
           '',
@@ -65,7 +65,7 @@ function main() {
   const filePath = path.join(DEPLOYMENTS_DIR, filename);
 
   if (!fs.existsSync(filePath)) {
-    die(`no rendered manifest at deploy/runner/deployments/${filename}`);
+    die(`no rendered manifest at deployments/${filename}`);
   }
 
   const r = spawnSync('kubectl', ['delete', '-n', args.namespace, '-f', filePath, '--ignore-not-found=true'], {
@@ -76,9 +76,9 @@ function main() {
 
   if (!args.keepFile) {
     fs.unlinkSync(filePath);
-    process.stderr.write(`removed deploy/runner/deployments/${filename}\n`);
+    process.stderr.write(`removed deployments/${filename}\n`);
   } else {
-    process.stderr.write(`kept deploy/runner/deployments/${filename} (--keep-file)\n`);
+    process.stderr.write(`kept deployments/${filename} (--keep-file)\n`);
   }
 }
 
