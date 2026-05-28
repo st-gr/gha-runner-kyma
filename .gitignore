@@ -35,3 +35,18 @@ scripts/node_modules/
 
 # Local agent state
 .claude/
+
+# Screenshots and other operator-environment artifacts that may carry
+# subaccount UUIDs, tunnel IDs, support emails, or hostnames. The repo
+# intentionally has no committed design assets — anything matching the
+# patterns below is operator-private and must never land here.
+sensitive-*
+*-gitignore.*
+*PII*
+*pii*
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.bmp
+*.webp
