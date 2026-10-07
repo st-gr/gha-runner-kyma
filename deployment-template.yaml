@@ -4,9 +4,11 @@
 # the rendered file to deploy/runner/deployments/<owner>-<repo>.yaml.
 #
 # Image: ghcr.io/actions/actions-runner — the same image the official
-# Actions Runner Controller uses. Replace `:latest` with a pinned
-# digest (recorded in deploy/runner/README.md) before any production
-# rollout.
+# Actions Runner Controller uses, pinned by digest. GitHub stops serving
+# jobs to runner versions it has deprecated, and with a moving tag the
+# nodes keep whatever version they cached first; when the runner logs
+# "Runner version ... is deprecated", pin the current release here and
+# re-run `make runner-add-repo` for every repo (README, "Image upgrade policy").
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -44,7 +46,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: runner
-          image: ghcr.io/actions/actions-runner:latest
+          image: ghcr.io/actions/actions-runner@sha256:4ffadc0002b2581327e06101fc8c06cd189232baf79fe561fac9caeb76f5e807   # 2.338.0
           imagePullPolicy: IfNotPresent
           command: ["/bin/bash", "/runner-entrypoint/entrypoint.sh"]
           env:
